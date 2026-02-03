@@ -38,5 +38,6 @@ export const CONFIG = {
     },
 
     // 本地存储键名
-    STORAGE_KEY: 'snakeGameHighScore'
+    STORAGE_KEY: 'snakeGameHighScore',
+    LEADERBOARD_KEY: 'snakeGameLeaderboard'
 };

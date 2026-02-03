@@ -6,7 +6,10 @@ import {
     isPositionInArray,
     getHighScore,
     saveHighScore,
-    isOppositeDirection
+    isOppositeDirection,
+    getLeaderboard,
+    saveToLeaderboard,
+    isTopThree
 } from './utils.js';
 
 export class Game {
@@ -212,6 +215,18 @@ export class Game {
             this.highScore = this.score;
         }
 
+        // 检查是否进入前三名
+        if (isTopThree(this.score)) {
+            // 延迟500ms后弹出输入框，让玩家先看到游戏结束画面
+            setTimeout(() => {
+                const name = prompt('🎉 恭喜进入前三名！\n请输入你的昵称：', '');
+                if (name !== null) {  // 用户点击了确定
+                    saveToLeaderboard(name.trim() || '匿名玩家', this.score);
+                }
+                this.render();  // 重新渲染以显示排行榜
+            }, 500);
+        }
+
         this.render();
     }
 
@@ -368,6 +383,34 @@ export class Game {
         // 绘制速度信息
         const speedPercent = Math.round((CONFIG.INITIAL_SPEED - this.speed) / (CONFIG.INITIAL_SPEED - CONFIG.MIN_SPEED) * 100);
         this.ctx.fillText(`速度: ${Math.max(0, speedPercent)}%`, 10, 75);
+
+        // 绘制排行榜（右上角）
+        this.drawLeaderboard();
+    }
+
+    /**
+     * 绘制排行榜前三名
+     */
+    drawLeaderboard() {
+        const leaderboard = getLeaderboard();
+
+        if (leaderboard.length === 0) return;
+
+        this.ctx.textAlign = 'right';
+        this.ctx.fillStyle = CONFIG.COLORS.TEXT;
+        this.ctx.font = 'bold 14px Arial';
+        this.ctx.fillText('🏆 排行榜', this.canvas.width - 10, 20);
+
+        this.ctx.font = '12px Arial';
+        this.ctx.fillStyle = CONFIG.COLORS.TEXT_SECONDARY;
+
+        const medals = ['🥇', '🥈', '🥉'];
+        leaderboard.forEach((entry, index) => {
+            const y = 40 + index * 20;
+            const medal = medals[index] || '';
+            const text = `${medal} ${entry.name}: ${entry.score}`;
+            this.ctx.fillText(text, this.canvas.width - 10, y);
+        });
     }
 
     /**

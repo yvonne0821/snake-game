@@ -64,3 +64,67 @@ export function saveHighScore(score) {
 export function isOppositeDirection(dir1, dir2) {
     return dir1.x === -dir2.x && dir1.y === -dir2.y;
 }
+
+/**
+ * 获取排行榜前三名
+ */
+export function getLeaderboard() {
+    try {
+        const data = localStorage.getItem(CONFIG.LEADERBOARD_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        console.warn('localStorage不可用，无法读取排行榜:', e);
+        return [];
+    }
+}
+
+/**
+ * 保存分数到排行榜
+ * @param {string} name - 玩家昵称
+ * @param {number} score - 分数
+ * @returns {boolean} - 是否进入前三名
+ */
+export function saveToLeaderboard(name, score) {
+    try {
+        let leaderboard = getLeaderboard();
+
+        // 添加新分数
+        leaderboard.push({
+            name: name || '匿名玩家',
+            score: score,
+            date: new Date().toLocaleDateString('zh-CN')
+        });
+
+        // 按分数降序排序
+        leaderboard.sort((a, b) => b.score - a.score);
+
+        // 只保留前三名
+        leaderboard = leaderboard.slice(0, 3);
+
+        // 保存
+        localStorage.setItem(CONFIG.LEADERBOARD_KEY, JSON.stringify(leaderboard));
+
+        // 检查是否进入前三名
+        return leaderboard.some(entry => entry.name === name && entry.score === score);
+    } catch (e) {
+        console.warn('localStorage不可用，无法保存排行榜:', e);
+        return false;
+    }
+}
+
+/**
+ * 检查分数是否能进入前三名
+ * @param {number} score - 分数
+ * @returns {boolean}
+ */
+export function isTopThree(score) {
+    const leaderboard = getLeaderboard();
+
+    // 如果排行榜不足3人，肯定能进
+    if (leaderboard.length < 3) {
+        return true;
+    }
+
+    // 检查是否超过第三名的分数
+    return score > leaderboard[2].score;
+}
