@@ -6,11 +6,13 @@ import {
     isPositionInArray,
     getHighScore,
     saveHighScore,
-    isOppositeDirection,
-    getLeaderboard,
-    saveToLeaderboard,
-    isTopThree
+    isOppositeDirection
 } from './utils.js';
+import {
+    getGlobalLeaderboard,
+    saveToGlobalLeaderboard,
+    isTopThreeGlobal
+} from './firebase-config.js';
 
 export class Game {
     constructor(canvas) {
@@ -31,12 +33,16 @@ export class Game {
         this.gameLoopId = null;
         this.lastUpdateTime = 0;
         this.foodCount = 0;  // 记录吃掉的食物数量，用于加速
+        this.leaderboard = [];  // 全球排行榜数据
 
         // 绑定键盘事件
         this.setupKeyboardControls();
 
         // 绑定触摸控制（手机支持）
         this.setupTouchControls();
+
+        // 加载全球排行榜
+        this.loadLeaderboard();
 
         // 生成第一个食物
         this.generateFood();
@@ -188,6 +194,14 @@ export class Game {
     }
 
     /**
+     * 加载全球排行榜
+     */
+    async loadLeaderboard() {
+        this.leaderboard = await getGlobalLeaderboard();
+        this.render();  // 重新渲染以显示排行榜
+    }
+
+    /**
      * 开始游戏
      */
     start() {
@@ -294,7 +308,7 @@ export class Game {
     /**
      * 游戏结束
      */
-    gameOver() {
+    async gameOver() {
         this.gameState = 'gameOver';
         this.stopGameLoop();
 
@@ -304,15 +318,18 @@ export class Game {
             this.highScore = this.score;
         }
 
-        // 检查是否进入前三名
-        if (isTopThree(this.score)) {
+        // 检查是否进入全球前三名
+        const canEnterTopThree = await isTopThreeGlobal(this.score);
+
+        if (canEnterTopThree) {
             // 延迟500ms后弹出输入框，让玩家先看到游戏结束画面
-            setTimeout(() => {
-                const name = prompt('🎉 恭喜进入前三名！\n请输入你的昵称：', '');
+            setTimeout(async () => {
+                const name = prompt('🎉 恭喜进入全球前三名！\n请输入你的昵称：', '');
                 if (name !== null) {  // 用户点击了确定
-                    saveToLeaderboard(name.trim() || '匿名玩家', this.score);
+                    await saveToGlobalLeaderboard(name.trim() || '匿名玩家', this.score);
+                    // 重新加载排行榜并渲染
+                    await this.loadLeaderboard();
                 }
-                this.render();  // 重新渲染以显示排行榜
             }, 500);
         }
 
@@ -481,20 +498,18 @@ export class Game {
      * 绘制排行榜前三名
      */
     drawLeaderboard() {
-        const leaderboard = getLeaderboard();
-
-        if (leaderboard.length === 0) return;
+        if (this.leaderboard.length === 0) return;
 
         this.ctx.textAlign = 'right';
         this.ctx.fillStyle = CONFIG.COLORS.TEXT;
         this.ctx.font = 'bold 14px Arial';
-        this.ctx.fillText('🏆 排行榜', this.canvas.width - 10, 20);
+        this.ctx.fillText('🏆 全球排行榜', this.canvas.width - 10, 20);
 
         this.ctx.font = '12px Arial';
         this.ctx.fillStyle = CONFIG.COLORS.TEXT_SECONDARY;
 
         const medals = ['🥇', '🥈', '🥉'];
-        leaderboard.forEach((entry, index) => {
+        this.leaderboard.forEach((entry, index) => {
             const y = 40 + index * 20;
             const medal = medals[index] || '';
             const text = `${medal} ${entry.name}: ${entry.score}`;
