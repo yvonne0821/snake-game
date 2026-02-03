@@ -35,6 +35,9 @@ export class Game {
         // 绑定键盘事件
         this.setupKeyboardControls();
 
+        // 绑定触摸控制（手机支持）
+        this.setupTouchControls();
+
         // 生成第一个食物
         this.generateFood();
 
@@ -83,6 +86,92 @@ export class Game {
                     break;
             }
         });
+    }
+
+    /**
+     * 设置触摸控制（支持手机）
+     */
+    setupTouchControls() {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        // 触摸开始
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: false });
+
+        // 触摸结束
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+
+            // 如果是点击（开始游戏）
+            const deltaX = Math.abs(touchEndX - touchStartX);
+            const deltaY = Math.abs(touchEndY - touchStartY);
+
+            if (deltaX < 10 && deltaY < 10) {
+                // 点击事件：开始游戏或暂停
+                if (this.gameState === 'ready' || this.gameState === 'gameOver') {
+                    this.start();
+                } else if (this.gameState === 'playing') {
+                    this.togglePause();
+                } else if (this.gameState === 'paused') {
+                    this.togglePause();
+                }
+                return;
+            }
+
+            // 计算滑动方向
+            this.handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+        }, { passive: false });
+    }
+
+    /**
+     * 处理滑动手势
+     */
+    handleSwipe(startX, startY, endX, endY) {
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        const minSwipeDistance = 30; // 最小滑动距离
+
+        // 判断是否达到最小滑动距离
+        if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) {
+            return;
+        }
+
+        // 判断主要滑动方向
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // 水平滑动
+            if (deltaX > 0) {
+                // 向右滑动
+                if (!isOppositeDirection(CONFIG.DIRECTION.RIGHT, this.snake.direction)) {
+                    this.snake.setDirection(CONFIG.DIRECTION.RIGHT);
+                }
+            } else {
+                // 向左滑动
+                if (!isOppositeDirection(CONFIG.DIRECTION.LEFT, this.snake.direction)) {
+                    this.snake.setDirection(CONFIG.DIRECTION.LEFT);
+                }
+            }
+        } else {
+            // 垂直滑动
+            if (deltaY > 0) {
+                // 向下滑动
+                if (!isOppositeDirection(CONFIG.DIRECTION.DOWN, this.snake.direction)) {
+                    this.snake.setDirection(CONFIG.DIRECTION.DOWN);
+                }
+            } else {
+                // 向上滑动
+                if (!isOppositeDirection(CONFIG.DIRECTION.UP, this.snake.direction)) {
+                    this.snake.setDirection(CONFIG.DIRECTION.UP);
+                }
+            }
+        }
     }
 
     /**
