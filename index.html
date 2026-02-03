@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇游戏 - Snake Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 标题 -->
+        <h1 class="game-title">🐍 贪吃蛇</h1>
+        <p class="game-subtitle">经典贪吃蛇游戏 - 现代版</p>
+
+        <!-- Canvas游戏区域 -->
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <!-- 控制说明 -->
+        <div class="controls">
+            <h3>游戏控制</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <span class="control-key">↑ ↓ ← →</span>
+                    <span class="control-desc">方向控制</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key">空格</span>
+                    <span class="control-desc">暂停/继续</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key">Enter</span>
+                    <span class="control-desc">开始/重新开始</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key">目标</span>
+                    <span class="control-desc">吃掉所有食物</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>每吃5个食物速度会增加 | 撞墙或撞到自己会游戏结束</p>
+            <p style="margin-top: 10px; opacity: 0.7;">最高分会自动保存在本地</p>
+        </div>
+    </div>
+
+    <!-- 引入游戏脚本 (使用ES6模块) -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
